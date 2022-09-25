@@ -1,0 +1,133 @@
+{
+    "WalkCycle": {
+        "offset": [60, 55],
+        "src": "modules/core/assets/bodies/MC/WalkCycle.gif"
+    },
+    "IdleBody": {
+        "offset": [60, 55],
+        "wallOffset": 10,
+        "src": "modules/core/assets/bodies/MC/IdleBody.gif"
+    },
+    "IdleHead": {
+        "offset": [60, 55],
+        "src": "modules/core/assets/bodies/MC/IdleHead.gif"
+    },
+    "SPistolPullout": {
+        "offset": [60, 55],
+        "wallOffset": 10,
+        "src": "modules/core/assets/bodies/MC/SPistolPullout.gif",
+        "frameStep": 0.2,
+        "loops": false
+    },
+    "SPistolReady": {
+        "offset": [60, 55],
+        "wallOffset": 10,
+        "src": "modules/core/assets/bodies/MC/SPistolReady.gif",
+        "frameStep": 0.7,
+        "loops": false
+    },
+    
+    "IdleLegs": {
+        "offset": [60, 55],
+        "src": "modules/core/assets/bodies/MC/IdleLegs.gif"
+    },
+
+    "NoneReady": {
+        "offset": [60, 55],
+        "src": "modules/core/assets/bodies/MC/NoneReady.gif",
+        "frameStep": 0.6,
+        "loops": false,
+        "wallOffset": 10
+    },
+
+    "NoneAttack1": {
+        "offset": [60, 55],
+        "src": "modules/core/assets/bodies/MC/NoneAttack1.gif",
+        "frameStep": 0.4,
+        "loops": false,
+        "wallOffset": 10
+    },
+
+    "NoneAttack2": {
+        "offset": [60, 55],
+        "src": "modules/core/assets/bodies/MC/NoneAttack2.gif",
+        "frameStep": 0.4,
+        "loops": false,
+        "wallOffset": 10
+    },
+
+    "SPistolReload": {
+        "offset": [60, 55],
+        "src": "modules/core/assets/bodies/MC/SPistolReload.gif",
+        "frameStep": 0.18,
+        "loops": false,
+        "wallOffset": 10
+    },
+
+    "SPistolSlideBack": {
+        "offset": [60, 55],
+        "src": "modules/core/assets/bodies/MC/SPistolSlideBack.gif",
+        "frameStep": 0.1,
+        "loops": false,
+        "wallOffset": 10
+    },
+
+    "DeadBack": {
+        "offset": [69, 25],
+        "src": "modules/core/assets/bodies/MC/DeadBack.png",
+        "frameStep": 0,
+        "loops": false
+    },
+
+    "DeadFoward": {
+        "offset": [69, 25],
+        "src": "modules/core/assets/bodies/MC/DeadFoward.png",
+        "frameStep": 0,
+        "loops": false
+    },
+
+    "DeadSide": {
+        "offset": [46, 14],
+        "src": "modules/core/assets/bodies/MC/DeadSide.png",
+        "frameStep": 0,
+        "loops": false
+    },
+
+
+
+
+    "__data__": {
+        "stepFrames": [1, 5],
+        "default_weapon": "core:None",
+        "radius": 12,
+        "availableWeapons": ["None", "spistol"],
+        "weapon": {
+            "None": {
+                "id": "core:None",
+                "pullOutAnim": "IdleBody",
+                "readyAnim": "NoneReady",
+                
+                "attack1position": [80, 56],
+                "attack1shape": [5, 5],
+                "attack1": "NoneAttack1",
+
+                "attack2position": [80, 57],
+                "attack2shape": [5, 5],
+                "attack2": "NoneAttack2"
+            },
+
+            "spistol": {
+                "midReloadFrame": 7,
+                "pauseTime": 20,
+                "id": "core:spistol",
+                "insertFrame": 9,
+                "pullOutAnim": "SPistolPullout",
+                "readyAnim": "SPistolReady",
+                "reloadAnim": "SPistolReload",
+                "slideAnim": "SPistolSlideBack",
+                "gunOffset": [84, 55],
+                "chamberOffset": [77, 56]
+            }
+        }
+    }
+}
