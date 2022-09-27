@@ -5,6 +5,7 @@ from .. import basicHuman
 from .... import hitbox
 
 class Fist(weapon.Weapon):
+    id = "core:Fist"
     def __init__(self, owner: basicHuman.BasicHuman):
         super(Fist, self).__init__(owner)
         
@@ -21,6 +22,13 @@ class Fist(weapon.Weapon):
         self.hitbox = hitbox.Rectangle(0, 0, 5, 5, 2.5, 2.5, 0)
 
     def updatePlayer(self):
+        if (self.hitbox.active):
+            for en in list(gb.entities.values()):
+                if (self.hitbox.hits(en.hitbox)):
+                    print(self.owner.angle)
+                    en.damage(1, self.owner.angle * math.pi / 180, kill=False)
+                    ...
+
         if (self.owner.attacking):
             if (self.owner.body.animation.currentFrame == len(self.owner.body.animation.frames()) - 2):
                 currentOffset = self.owner.body.data["offset"]

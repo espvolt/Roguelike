@@ -4,6 +4,7 @@ from typing import Callable
 
 
 class Weapon:
+    id = None
     def __init__(self, owner: "basicHuman.BasicHuman"):
         self.owner = owner
         self.allowUnready = True

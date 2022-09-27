@@ -18,20 +18,29 @@ import numpy as np
 import math
 import pygame
 
-
 weapons = [None, "spistol"]
 
 class Body(entity.Entity):
-    def __init__(self, x: float, y: float, animation: entity.AnimationComponent, angle: float, vAngle: float, kill: bool=True):
+    def __init__(self, x: float, y: float, animation: entity.AnimationComponent, side: entity.AnimationComponent, carry: entity.AnimationComponent, angle: float, vAngle: float, kill: bool=True):
         super(Body, self).__init__(x, y, "", dead=True)
         self.angle = angle
         self.vAngle = vAngle
         self.velocity = 10
         self.animation = animation
+        self.side = side
         self.collided = False
         self.kill = kill
+        self.carry = carry
+        self.bloodEffect = None        
+        self.vMul = .8
+        self.done = False
+        self.bloodSpawned = False
+        self.drawAnim = self.animation
 
     def update(self):
+        if (self.done):
+            self.animation.animation.updateAnimation()
+            return
         self.xVelocity = math.cos(self.vAngle) * self.velocity
         self.yVelocity = math.sin(self.vAngle) * self.velocity
 
@@ -72,30 +81,38 @@ class Body(entity.Entity):
                     self.y + ny * r + self.yVelocity) and j.isPointOver(self.x + nx * r, self.y + ny * r)) or j.distFrom(self.x, self.y) < r)):
                     self.xVelocity += nx * ndot
                     self.yVelocity += ny * ndot
-
-                    newSpriteAngle = math.atan2(nx * ndot, ny * ndot) * 180 / math.pi - 90
+                    self.angle = -math.atan2(nx * ndot, ny * ndot) - math.pi / 2
+                    self.drawAnim = self.side
                     self.collided = True
                     self.velocity = 0
+                    print(":)")
 
                     fin = True
                     break
             
             if (fin):
                 break
-
+        
         if (abs(self.velocity) < .17):
-            if (not self.collided and self.kill):
-                gb.effects["BloodEffect"].addBlood(blood.Blood(self.x, self.y, self.angle))
+            if (not self.collided and self.kill and not self.bloodSpawned):
+                self.bloodEffect = blood.Blood(self.x, self.y, self.angle)
+                gb.effects["BloodEffect"].addBlood(self.bloodEffect)
+                self.bloodSpawned = True
 
-            self.update = lambda: self.animation.animation.updateAnimation()
-
+            self.done = True
+        
+        self.drawAnim.animation.updateAnimation()
         self.x += self.xVelocity
         self.y += self.yVelocity
-        self.velocity *= .8
+        self.velocity *= self.vMul
+
+    def disableEffect(self):
+        if (self.bloodEffect is not None):
+            self.bloodEffect.disable()
 
     def draw(self):
-        util.blitRotate(gb.display, self.animation.animation.getFrame(), [self.x, self.y], self.animation.offset, -self.angle * 180 / math.pi)
-        
+        util.blitRotate(gb.display, self.drawAnim.animation.getFrame(), [self.x, self.y], self.drawAnim.offset, -self.angle * 180 / math.pi)
+
 class BasicHuman(entity.Entity):
     def __init__(self, x: float, y: float, name: str, characterData: dict[str, entity.AnimationComponent]):
         super(BasicHuman, self).__init__(x, y, name)
@@ -129,9 +146,14 @@ class BasicHuman(entity.Entity):
         self.walkingMultiplier = 1
 
         self.sounds["WoodStep"] = [pygame.mixer.Sound(gb.baseDir + "/modules/core/assets/floors/WoodFloor/WoodFloorStep.wav"),
-                                   pygame.mixer.Sound(gb.baseDir + "/modules/core/assets/floors/WoodFloor/WoodFloorStep2.wav")] 
+                                   pygame.mixer.Sound(gb.baseDir + "/modules/core/assets/floors/WoodFloor/WoodFloorStep2.wav")]
+
+        self.pickupTime = 0
+
+        self.holdBody: Body = None
+        self.bodyHeld = False
         
-        
+
         self.temp = False
         self.path: list[map.Node] = []
 
@@ -154,8 +176,7 @@ class BasicHuman(entity.Entity):
             else:
                 animToUse = self.characterData["DeadFoward"]
 
-            
-            Body(self.x, self.y, animToUse, angle, angle, kill)
+            Body(self.x, self.y, animToUse, self.characterData["DeadSit"], self.characterData["DeadPicked"], angle, angle, kill)
             gb.entities.pop(self.id)
             return
 
@@ -227,10 +248,13 @@ class BasicHuman(entity.Entity):
                 
         return True
 
+    def pickupBody(self, en: Body):
+        ...
+
     def update(self):
         if (not self.temp):
             self.temp = True
-            self.path = map.findPath(self.x // 32, self.y // 32, 500 // 32, 200 // 32)
+            # self.path = map.findPath(self.x // 32, self.y // 32, 500 // 32, 200 // 32)
 
         if (len(self.path) != 0):
             dist =  abs(self.x - (self.path[0].x * 32 + 16)) + abs(self.y - (self.path[0].y * 32 + 16))
@@ -306,6 +330,10 @@ class BasicHuman(entity.Entity):
         # map.drawPath(self.path, [0, 255, 0])
         util.blitRotate(gb.display, self.legs.animation.getFrame(), [self.x, self.y], self.legs.offset, angle)
         util.blitRotate(gb.display, self.body.animation.getFrame(), [self.x, self.y], self.body.offset, self.angle)
+
+        if (self.bodyHeld):
+            util.blitRotate(gb.display, self.holdBody.carry.animation.getFrame(), [self.x, self.y], self.holdBody.carry.offset, self.angle)
+
         util.blitRotate(gb.display, self.head.animation.getFrame(), [self.x, self.y], self.head.offset, self.angle)
         if (hitbox):
             if (self.attacking):
@@ -322,6 +350,33 @@ class HumanPlayer(BasicHuman):
 
 
     def update(self):
+        assinationTarget = None
+        bodyTarget = None
+
+        for i in gb.entities:
+            en = gb.entities[i]
+
+            if (en.id == self.id):
+                continue
+
+            dist = math.sqrt((self.x - en.x) ** 2 + (self.y - en.y) ** 2)
+            angle = math.atan2(en.y - self.y, en.x - self.x) * 180 / math.pi
+            anglediff = (angle - en.angle + 180 + 360) % 360 - 180
+
+            if (dist < 35 and anglediff <= 90 and anglediff >= -90):
+                assinationTarget = en
+                break
+
+        for i in gb.bodyentities:
+            en = gb.bodyentities[i]
+
+            dist = math.sqrt((self.x - en.x) ** 2 + (self.y - en.y) ** 2)
+
+            if (dist < 20):
+                bodyTarget = en
+                break
+
+
         xdir = 0
         ydir = 0
 
@@ -365,14 +420,88 @@ class HumanPlayer(BasicHuman):
 
                 self.currentWeapon = self.availableWeapons[int(i.unicode) - 1]
 
+        if (not self.bodyHeld):
         
-        if (gb.mouseInput[2] or not self.weapon.allowUnready):
-            self.shouldReadyWeapon = True
-        else:
-            self.shouldReadyWeapon = False
+            if (gb.mouseInput[2] or not self.weapon.allowUnready):
+                self.shouldReadyWeapon = True
+            else:
+                self.shouldReadyWeapon = False
 
-        if (self.weaponAvailable and self.weaponReady):
-            self.weapon.updatePlayer()
+            if (self.weaponAvailable and self.weaponReady):
+                self.weapon.updatePlayer()
+
+            elif (assinationTarget != None and gb.keyInputs[pygame.K_e]):
+                # self.weapon.id
+                print("HAHAH")
+
+            elif (bodyTarget != None and gb.keyInputs[pygame.K_e]):
+                self.pickupTime += 1
+
+                self.body = self.characterData["PickupBody"]
+                self.head = self.characterData["PickupHead"]
+
+                self.xVelocity = 0
+                self.yVelocity = 0
+
+                if (self.pickupTime >= 60):
+                    self.holdBody = gb.bodyentities.pop(bodyTarget.id)
+                    self.holdBody.disableEffect()
+                    self.bodyHeld = True
+                    
+                    self.body.animation.currentFrame = 0
+                    self.head.animation.currentFrame = 0
+                    
+                    self.body = self.characterData["IdleBody"]
+                    self.head = self.characterData["IdleHead"]
+
+                    self.pickupTime = 0
+
+            else:
+                if (self.pickupTime != 0):
+                    self.body.animation.currentFrame = 0
+                    self.head.animation.currentFrame = 0
+                    self.pickupTime = 0
+
+                self.body = self.characterData["IdleBody"]
+                self.head = self.characterData["IdleHead"]
+        else:
+            self.walkingMultiplier *= .2
+            if (gb.mouseInput[0]): # holy shit
+                # TODO CLEAN THIS SHIT UP
+                gb.bodyentities[self.holdBody.id] = self.holdBody
+                self.holdBody.vMul = .9
+                self.holdBody.x = self.x
+                self.holdBody.y = self.y
+                self.holdBody.angle = -self.angle * math.pi / 180
+                self.holdBody.vAngle = -self.angle * math.pi / 180
+                self.holdBody.velocity = 10
+                self.holdBody.done = False
+                self.holdBody.bloodSpawned = False
+                self.holdBody.collided = False
+                self.holdBody.drawAnim = self.holdBody.animation
+                self.holdBody = None
+                self.bodyHeld = False
+
+                self.body.animation.currentFrame = 0
+                self.head.animation.currentFrame = 0
+
+                self.body = self.characterData["IdleBody"]
+                self.head = self.characterData["IdleHead"]
+
+
+            elif(gb.mouseInput[1]):
+                gb.bodyentities[self.holdBody.id] = self.holdBody
+                self.holdBody.vMul = .8
+                self.holdBody.angle = -self.angle * math.pi / 180
+                self.holdBody.done = False
+                self.holdBody.drawAnim = self.holdBody.animation
+                self.holdBody = None
+                self.bodyHeld = False
+
+            
+
+
+
 
         self.angle = ((util.angleToPoint(gb.mousePos, (self.x, self.y)) * 180 / math.pi) + 90) * -1
 

@@ -14,6 +14,7 @@ from ...effects import shake
 from ...effects import smoke
 
 class SilencedPistol(weapon.Weapon):
+    id = "core:spistol"
     def __init__(self, owner: basicHuman.BasicHuman):
         super(SilencedPistol, self).__init__(owner)
         self.soundShoot: pygame.mixer.Sound = pygame.mixer.Sound(gb.baseDir + "/modules/core/assets/weapons/SPistolShoot.wav")

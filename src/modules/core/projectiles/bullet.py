@@ -63,6 +63,7 @@ class Bullet(projectile.Projectile):
             if (i.hitbox.intersects(l)):
                 i.damage(1, self.angle)
                 self.killBullet()
+                return
 
         for i in range(5):
             nextX = textX + math.cos(self.angle) * self.velocity / 5

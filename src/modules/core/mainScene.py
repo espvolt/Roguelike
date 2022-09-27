@@ -72,9 +72,11 @@ class MainScene(scene.Scene):
         for i in list(gb.projectiles.values()):
             i.update()
 
+        if (gb.keyInputs[pygame.K_SPACE]):
+            basicHuman.BasicHuman(gb.mousePos[0], gb.mousePos[1], "B", copy.deepcopy(gb.CharacterData["MC"]))
+
 
     def draw(self):
-        map.drawMap()
 
         for i in gb.floors:
             gb.floors[i].draw(i[0], i[1])
@@ -82,6 +84,8 @@ class MainScene(scene.Scene):
         for i in gb.effects:
             gb.effects[i].backGroundDraw()
 
+        map.drawMap()
+        
         for i in list(gb.bodyentities.values()):
             i.draw()
             
@@ -103,11 +107,5 @@ def setup():
     global soundData
     gb.currentScene = MainScene()
     sound.playMusic(gb.baseDir + "/modules/core/assets/DeepBlue.wav", .3)
-    
 
-    # gb.player.pregenerateSong(gb.baseDir + "/modules/core/assets/db.mp3", 1, gb.baseDir + "/modules/core/temp/songdata", False)
-    # gb.player.playsoundbackgroundedit("db.mp3", soundData, start = 60)
-
-
-    
     

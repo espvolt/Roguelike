@@ -74,7 +74,7 @@ class Entity:
     def draw(self):
         ...
 
-    def damage(self, x: float, angle: float):
+    def damage(self, x: float, angle: float, kill: float=False):
         ...
 
     

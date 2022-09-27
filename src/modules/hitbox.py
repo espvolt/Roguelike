@@ -108,6 +108,13 @@ class Rectangle(Hitbox):
 
         return a_.intersects(line) or b_.intersects(line) or c_.intersects(line) or d_.intersects(line)
 
+    def hits(self, other: Hitbox) -> bool:
+        a = Rectangle.rotatePoint(self.origin, self.x, self.y, self.angle)
+        b = Rectangle.rotatePoint(self.origin, self.x + self.w, self.y, self.angle)
+        c = Rectangle.rotatePoint(self.origin, self.x, self.y + self.h, self.angle)
+        d = Rectangle.rotatePoint(self.origin, self.x + self.w, self.y + self.h, self.angle)
+        
+        return other.contains(a[0], a[1]) or other.contains(b[0], b[1]) or other.contains(c[0], c[1]) or other.contains(d[0], d[1])
         ...
 
     @staticmethod 

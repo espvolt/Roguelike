@@ -93,8 +93,33 @@
         "loops": false
     },
 
+    "DeadSit": {
+        "offset": [41, 16],
+        "src": "modules/core/assets/bodies/MC/DeadSit.png",
+        "frameStep": 0,
+        "loops": false
+    },
 
+    "PickupBody": {
+        "offset": [60, 55],
+        "src": "modules/core/assets/bodies/MC/PickupBody.gif",
+        "frameStep": 0.1,
+        "loops": false
+    },
 
+    "PickupHead": {
+        "offset": [60, 55],
+        "src": "modules/core/assets/bodies/MC/PickupHead.gif",
+        "frameStep": 0.1,
+        "loops": false
+    },
+
+    "DeadPicked": {
+        "offset": [60, 55],
+        "src": "modules/core/assets/bodies/MC/BodyCarried.png",
+        "frameStep": 0.1,
+        "loops": false
+    },
 
     "__data__": {
         "stepFrames": [1, 5],
